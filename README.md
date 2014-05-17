@@ -8,10 +8,8 @@ MetricSpec is a tool for testing your server's metrics in elasticsearch.
 require "metricsspec"
 
 RSpec.configure do |c|
-  #c.host = "www1202uj.sakura.ne.jp"
   c.elasticsearch = {
-    host: "localhost",
-    log: true
+    host: "localhost"
   }
 end
 
