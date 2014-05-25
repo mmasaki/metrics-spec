@@ -8,8 +8,8 @@ module MetricsSpec
       ::MetricsSpec.client.search(*args)
     end
 
-    def hosts
-      RSpec.configuration.hosts.dup
+    def localhost
+      RSpec.configuration.host
     end
   end
 end

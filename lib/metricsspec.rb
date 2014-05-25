@@ -2,6 +2,8 @@ require "socket"
 require "rspec"
 require "elasticsearch"
 require "jbuilder"
+#require "active_support/time"
+require "active_support/core_ext/numeric"
 
 module MetricsSpec
   module_function
@@ -13,6 +15,7 @@ end
 
 require "metricsspec/version"
 require "metricsspec/metrics"
+require "metricsspec/field"
 require "metricsspec/helpers"
 
 RSpec.configure do |c|

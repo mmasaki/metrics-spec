@@ -4,20 +4,17 @@ module MetricsSpec
 
     def initialize(query_string, host_field: nil)
       @query_string = query_string
-      host = RSpec.configuration.host
-      host_field = host_field || RSpec.configuration.host_field
-      host_filter = {
-        term: {
-          host_field => host
-        }
-      }
-      @filters = [host_filter]
+      @filters = []
     end
 
     attr_reader :query_string, :aggs, :filters
 
     def initialize_copy(orig)
       @filters = orig.filters.dup
+    end
+
+    def [](field)
+      Field.new(self, field)
     end
 
     def count
@@ -42,8 +39,8 @@ module MetricsSpec
         end
       end
       hits = search(body)["hits"]["hits"]
-      hits.map {|hit| hit["_source"] }
-      return hits.first if n == 1
+      hits.map! {|hit| hit["_source"] }
+      return hits.first if n == 2
       return hits
     end
 
@@ -51,18 +48,13 @@ module MetricsSpec
       count.zero?
     end
 
-    SingleValueAggs = [:min, :max, :sum, :avg, :value_count, :cardinality].freeze
-    SingleValueAggs.each do |aggregation_type|
-      define_method(aggregation_type) do |field|
-        return aggregation(aggregation_type, field)["value"]
-      end
-    end
-
-    MultiValueAggs = [:stats, :extended_stats, :percentiles].freeze
-    MultiValueAggs.each do |aggregation_type|
-      define_method(aggregation_type) do |field|
-        return aggregation(aggregation_type, field)
-      end
+    def term(field, term)
+      filter = {
+        term: {
+          field => term
+        }
+      }
+      return filtered(filter)
     end
 
     def range(field, **range)
@@ -72,14 +64,21 @@ module MetricsSpec
           field => range
         }
       }
-      duped = self.dup
-      duped.filters.push(filter)
-      return duped
+      return filtered(filter)
     end
 
-    private
+    DefaultHostField = "@host"
+    DefaultTimeField = "@timestamp"
 
-    def aggregation(aggregation_type, field)
+    def at(host, field: DefaultHostField)
+      term(field, host)
+    end
+
+    def within(seconds, field: DefaultTimeField)
+      range(field, gte: "now-#{seconds}s")
+    end
+
+    def aggs(aggregation_type, field, **options)
       field = field.to_s
       query = Jbuilder.encode do |json|
         json.size 0
@@ -87,6 +86,7 @@ module MetricsSpec
           json.set! field do
             json.set! aggregation_type do
               json.field field
+              json.merge! options unless options.empty?
             end
           end
         end
@@ -95,6 +95,8 @@ module MetricsSpec
       return search(query)["aggregations"][field]
     end
 
+    private
+
     def search(body)
       MetricsSpec.client.search(q: @query_string, body: body)
     end
@@ -102,6 +104,12 @@ module MetricsSpec
     def build_filters
       return @filters.first if @filters.size == 1
       return Jbuilder.new {|json| json.and @filters }
+    end
+
+    def filtered(filter)
+      duped = self.dup
+      duped.filters.push(filter)
+      return duped
     end
   end
 end
