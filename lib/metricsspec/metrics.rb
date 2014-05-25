@@ -40,7 +40,7 @@ module MetricsSpec
       end
       hits = search(body)["hits"]["hits"]
       hits.map! {|hit| hit["_source"] }
-      return hits.first if n == 2
+      return hits.first if n == 1
       return hits
     end
 
