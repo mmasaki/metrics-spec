@@ -45,8 +45,22 @@ describe MetricsSpec do
     end
 
     describe "last" do
-      let(:item1) { { "foo" => "bar" } }
-      let(:item2) { { "hoge" => "fuga" } }
+      let(:item1) do
+        { 
+          "_source" => {
+            "foo" => "bar"
+          }
+        }
+      end
+
+      let(:item2) do
+        { 
+          "_source" => {
+            "hoge" => "fuga"
+          }
+        }
+      end
+
       before do 
         client = double("client")
         expect(client).to receive(:search) do
@@ -63,34 +77,15 @@ describe MetricsSpec do
       end
 
       context "without arguments" do
-        it { expect(subject.last).to eq item1 }
+        it { expect(subject.last).to eq item1["_source"] }
       end
 
       context "n = 2" do
-        it { expect(subject.last(2)).to eq [item1, item2] }
+        it { expect(subject.last(2)).to eq [item1["_source"], item2["_source"]] }
       end
     end
 
-    describe "min" do
-      let(:field) { "foo" }
-      let(:min) { 42 }
 
-      before do 
-        client = double("client")
-        expect(client).to receive(:search) do
-          { 
-            "aggregations" => { 
-              field => {
-                "value" => min
-              }
-            }
-          }
-        end
-        expect(MetricsSpec).to receive(:client) { client }
-      end
-
-      it { expect(subject.min(field)).to eq min }
-    end
 
     describe "range" do
       let(:range_metrics) { metrics("foo").range("field", gt: "now-2m") }
@@ -132,6 +127,55 @@ describe MetricsSpec do
         it { expect(subject).to include filter1 }
         it { expect(subject).to include filter2 }
       end
+    end
+  end
+
+  describe Field do
+    let(:_metrics) { metrics("foo") }
+
+    describe "min" do
+      let(:field_name) { "value" }
+      let(:field) { _metrics[field_name] }
+      let(:min) { 42 }
+
+      before do 
+        client = double("client")
+        expect(client).to receive(:search) do
+          { 
+            "aggregations" => { 
+              field_name => {
+                "value" => min
+              }
+            }
+          }
+        end
+        expect(MetricsSpec).to receive(:client) { client }
+      end
+
+      it { expect(field.min).to eq min }
+    end
+
+    describe "stats" do
+      let(:field_name) { "value" }
+      let(:field) { _metrics[field_name] }
+      let(:avg) { 42 }
+      let(:stats_expected) { { "avg" => avg } }
+
+      before do 
+        client = double("client")
+        expect(client).to receive(:search) do
+          { 
+            "aggregations" => { 
+              field_name => {
+                "avg" => avg
+              }
+            }
+          }
+        end
+        expect(MetricsSpec).to receive(:client) { client }
+      end
+
+      it { expect(field.stats).to eq stats_expected }
     end
   end
 end
