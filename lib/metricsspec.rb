@@ -1,8 +1,8 @@
 require "socket"
-require "rspec"
-require "elasticsearch"
+require "rspec/core"
 require "jbuilder"
 require "active_support/core_ext/numeric"
+require "elasticsearch"
 
 module MetricsSpec
   module_function
