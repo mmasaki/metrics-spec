@@ -2,7 +2,6 @@ require "socket"
 require "rspec"
 require "elasticsearch"
 require "jbuilder"
-#require "active_support/time"
 require "active_support/core_ext/numeric"
 
 module MetricsSpec
