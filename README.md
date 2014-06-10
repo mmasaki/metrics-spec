@@ -16,8 +16,23 @@ end
 ```
 
 ```ruby:cpu_spec.rb
-describe metrics("@tag:dstat.cpu-usr").avg("value") do
-  it { should be < 90 }
+describe "cpu usage" do
+  let(:cpu_usr) { metrics("@tag:dstat.cpu.usr").within(1.hour)["value"] }
+  let(:cpu_sys) { metrics("@tag:dstat.cpu.sys").within(1.hour)["value"] }
+
+  it "%usr + %sys shoud be less than 90" do
+    expect(cpu_usr.avg + cpu_sys.avg).to be < 90
+  end
+end
+
+describe "network" do
+  describe "receive" do
+    let(:net_receive) { metrics("@tag:dstat.net.recv").within(1.hour)["value"] }
+
+    it "average should be less than 2 megabyte" do
+      expect(net_receive.avg).to be < 1.megabyte
+    end
+  end
 end
 ```
 
