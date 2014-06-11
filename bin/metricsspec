@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+require "metricsspec"
+
+RSpec.configure do |c|
+  es_config = {}
+  es_config[:host] = ENV["ES_HOST"] if ENV["ES_HOST"]
+  es_config[:port] = ENV["ES_PORT"] if ENV["ES_PORT"]
+  c.elasticsearch = es_config
+end
+
+RSpec::Core::Runner.invoke
