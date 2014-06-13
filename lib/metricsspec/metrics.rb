@@ -58,7 +58,6 @@ module MetricsSpec
     end
 
     def range(field, **range)
-      range.compact!
       filter = {
         range: {
           field => range
