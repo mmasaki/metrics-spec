@@ -11,5 +11,11 @@ module MetricsSpec
     def localhost
       RSpec.configuration.host
     end
+
+    def failed(exception_class=RSpec::Expectations::ExpectationNotMetError)
+      after do |example|
+        yield(example) if example.exception.is_a?(exception_class)
+      end
+    end
   end
 end
